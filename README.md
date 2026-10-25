@@ -1,4 +1,4 @@
-# OrdinaryDiffEq.mbt
+# moonbit_ordinaryDiffEq
 
 [MoonBit](https://www.moonbitlang.com) 移植的 [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl)：一套**逐行对齐上游**的常微分方程求解器，覆盖显式 Runge–Kutta、Rosenbrock 与变阶变步长 BDF 三大家族，自带稠密输出、自适应步长控制、tstops、saveat 与 STALD 检测。
 
