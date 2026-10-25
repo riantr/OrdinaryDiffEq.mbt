@@ -20,9 +20,9 @@
 | 性能/基准 | 🟢 有 `bench_test.mbt`（用 `core/bench`）；**端口 CI 已加 `benchmark` 作业 + 50ms 合理性预算门**，JSON 结果上传 artifact（精确回归阈值待建基线；仅 Julia 侧有 `benchmark.yml`） |
 | Fuzz / Gherkin / 负载 | 🟡 **Fuzz/属性测试已落地**（`src/src/fuzz_test.mbt`，7 个随机化测试，随四目标 `test` 矩阵运行）；Gherkin 数值库低优先、有意不做；负载不适用 |
 | 重复代码 | 🟡 结构性重复为主：`alg_vern7`/`alg_vern9` 共享 **109** 个相同 5 行片段；求解器脚手架跨 8 文件重复；测试样板跨 10 文件重复 |
-| 指标门禁 | 🔴 无自动复杂度/重复率/质量门禁（本次为一次性测算） |
+| 指标门禁 | 🟢 **CI 已加 `metrics` 作业 + `qa/metrics_gate.py`**：单文件决策点 ≤120、`unsafe_get/set` ≤1600、重复率 ≤20%、`test` 块 ≥90，`extern`/`panic`/`abort`/`raise` 恒为 0（详见 §6.6） |
 
-**总体判断**：端口的**功能正确性质量很高**（四目标全绿、覆盖率 91%、数值契约对齐上游），且**工程化 QA 门禁已较完整**——测试矩阵、类型检查、覆盖率门禁+上报、依赖钉版本守卫、基准 CI、Fuzz/属性测试均已落地；错误以 `Retcode` 返回码表达（无裸 panic）。剩余弱项集中在**自动质量指标门禁（复杂度/重复率趋势）**、**精确性能回归阈值（需基线）** 与**跨实现（vs Julia）集成比对显式化**。下面的 16 维度逐项给出证据与修复路线。
+**总体判断**：端口的**功能正确性质量很高**（四目标全绿、覆盖率 91%、数值契约对齐上游），且**工程化 QA 门禁已相当完整**——测试矩阵、类型检查、覆盖率门禁+上报、依赖钉版本守卫、基准 CI、Fuzz/属性测试、质量指标门禁均已落地；错误以 `Retcode` 返回码表达（无裸 panic）。剩余弱项集中在**精确性能回归阈值（需基线）** 与**跨实现（vs Julia）集成比对显式化**。下面的 16 维度逐项给出证据与修复路线。
 
 ---
 
@@ -47,7 +47,7 @@
 | 13 | 性能（Performance） | 🟢 | 有 `bench_test`；**CI 已加 `benchmark` 作业（native/release）+ 50ms 合理性预算门**，JSON 结果上传 artifact 供趋势追踪；精确回归阈值待建基线 |
 | 14 | 负载（Load） | ⚪ | 非服务类库，无并发/吞吐面；大规模 N 的内存/稳定性未测（低优先） |
 | 15 | 重复代码（Duplication） | 🟡 | 多为代码生成家族的结构性重复（可接受），但测试样板与求解器脚手架可抽公共helper |
-| 16 | 指标（Metrics） | 🔴 | 无自动复杂度/重复率/质量门禁；本次为人工测算（附脚本可复用） |
+| 16 | 指标（Metrics） | 🟢 | CI 已加 `metrics` 作业：单文件决策点 ≤120、unsafe ≤1600、重复率 ≤20%、测试块 ≥90、extern/panic/abort/raise 恒 0；并修正了原扫描把注释计入导致的复杂度高估 |
 
 ---
 
@@ -104,7 +104,7 @@
 | `unsafe_get` / `unsafe_set`（方法） | **1051** | 20 个源文件全覆盖（数值内核） |
 | `extern` | 0 | 端口无 FFI（✅ 与 README“无 FFI”一致） |
 | `panic` / `abort` | 0 | — |
-| `raise` / `error`(显式) | 0 | `control.mbt` 仅注释中出现 “error” 字样（误报） |
+| `raise` / `error`(显式) | 0 | 初版 grep 曾报 1 处，系 `control.mbt:114` 文档注释里的 “error (” 字样（误报）；现行扫描已先剥离注释，故真实代码 0 处 |
 | `unwrap` / `expect` | 0 | — |
 | TODO / FIXME / HACK | 0 | — |
 
@@ -112,17 +112,19 @@
 
 ### 2.4 复杂度热点（决策点代理 = if/match/while/for/loop/guard/try/else 计数）
 
+> **口径更新（2026-10-25）**：计数改为**剥离 `//` 注释后**再统计。此前直接对原文计数，会把文档注释里的 `if`/`while`/`else` 等词一并计入，系统性**高估**复杂度。故下表数值低于本报告初版；以新版为准。
+
 | 文件 | 代码行 | 决策点 | 注释率 | 最长行 |
 |------|-------|-------|-------|-------|
-| alg_fbdf.mbt | 874 | **134** | 36% | 88 |
-| solve.mbt | 399 | **106** | 31% | 86 |
-| bdf_utils.mbt | 592 | **89** | 36% | 94 |
-| stald.mbt | 527 | 77 | 23% | 83 |
-| jacobian.mbt | 405 | 46 | 33% | 79 |
-| alg_explicit_rk.mbt | 224 | 43 | 36% | 83 |
-| alg_rodas5p.mbt | 301 | 45 | 40% | 99 |
-| control.mbt | 267 | 35 | 36% | 80 |
-| alg_vern9.mbt | 1718 | 28 | 13%（多为系数表） | **182** |
+| alg_fbdf.mbt | 874 | **102** | 36% | 88 |
+| solve.mbt | 399 | **91** | 32% | 86 |
+| stald.mbt | 527 | **67** | 23% | 83 |
+| bdf_utils.mbt | 592 | **55** | 36% | 94 |
+| alg_explicit_rk.mbt | 224 | **29** | 40% | 83 |
+| alg_rodas5p.mbt | 301 | **28** | 39% | 99 |
+| control.mbt | 267 | **25** | 34% | 80 |
+| alg_vern9.mbt | 1718 | **23** | 13%（多为系数表） | **182** |
+| jacobian.mbt | 405 | **17** | 33% | 79 |
 
 ### 2.5 重复代码（5 行滑动窗口哈希，仅列 Top）
 
@@ -223,14 +225,21 @@
 - **建议**：
   1. `vern7/vern9` 抽取共享 Verner 内核模板（或保留生成脚本并加生成注释，明确“生成即重复”）。
   2. 测试样板抽为 `testkit` helper（`make_problem`/`assert_close`/`run_solver`），降低样板重复、统一容差。
-  3. 将重复率纳入指标门禁（见 16）。
+  3. ~~将重复率纳入指标门禁~~ → 已完成：`qa/metrics_gate.py` 对重复率设 ≤20% 门禁（当前 10.9%，见 §6.6）。
 
-### 16) 指标 🔴
-- **发现**：无自动复杂度/重复率/质量门禁；本次为人工一次性测算（脚本可复用）。
-- **建议**：
-  1. CI 加质量门禁作业：复用 `qa/qa_analysis.py` 输出（复杂度热点、重复簇、SAST 信号、覆盖率），失败条件可配置。
-  2. 对复杂度热点（`alg_fbdf` 134 / `solve` 106 / `bdf_utils` 89 决策点）做评审/拆分，降低认知负荷与回归风险。
-  3. 统一格式与行宽（`alg_vern9` 最长行 182，多为系数，可接受；其余应 ≤120）。
+### 16) 指标 🟢（门禁已加）
+- **发现（原 🔴）**：此前无自动复杂度/重复率/质量门禁，仅人工一次性测算。本会话已补齐——新增 `qa/metrics_gate.py` + CI `metrics` 作业，把质量指标变成**持续执行的门禁**（详见 §6.6）。
+- **已门禁的指标**（默认值按基线留足余量，只拦“阶跃式恶化”）：
+  - 单文件决策点 ≤ 120（当前最高 102，`alg_fbdf.mbt`）— 拦新增巨型模块。
+  - `unsafe_get/unsafe_set` 调用点 ≤ 1600（当前 1051）— 拦越界访问失控式增长。
+  - 重复率 ≤ 20.0%（当前 **10.9%**，1737/15981 处 5 行窗口）— 拦复制粘贴蔓延。
+  - `test` 块数 ≥ 90（当前 98）— 拦测试被删。
+  - **架构不变量恒为 0**：`extern`、`panic`、`abort`、`raise/error`——端口刻意“零 FFI、零 panic（错误一律走 `Retcode`）”，一旦破例立即失败。
+- **同时修正的口径**：`qa/qa_analysis.py` 现已在统计前**剥离 `//` 注释**。原实现把注释里的关键词计入，既高估复杂度（初版称 `alg_fbdf` 134 / `solve` 106 / `bdf_utils` 89，实为 **102 / 91 / 55**），也让 `raise/error` 误报 1 处。见 §2.4 口径说明。
+- **残留建议**：
+  1. 对复杂度热点（`alg_fbdf` 102 / `solve` 91 / `stald` 67 决策点）做评审/拆分，降低认知负荷与回归风险。
+  2. 统一格式与行宽（`alg_vern9` 最长行 182，多为系数，可接受；其余应 ≤120）。
+  3. 如需趋势视图，可将 `metrics.json` artifact 跨运行留存比对（同类于 `bench_results.json`）。
 
 ---
 
@@ -244,7 +253,7 @@
 | P1 | ~~显式错误健壮层~~ → 已有 `Retcode` 返回码体系（`solve.mbt` 每迭代 `check_error`、`lu_factor` 奇异/NaN 主元返回 `false` 转步失败），错误以返回码而非裸 panic 表达（符合 SciML `sol.retcode` 约定） | SAST/运行时 | 可观测、可恢复（**已完成**；仅奇异/NaN 细分诊断待补） |
 | P1 | 端口基准 CI（合理性预算门）+ JSON 趋势 artifact | 性能 | 防止灾难性性能退化（**已完成**；精密回归阈值待基线） |
 | P2 | 测试样板/Verner 内核抽公共 helper | 重复代码 | 可维护性 |
-| P2 | 质量指标门禁（复杂度/重复率/SAST 趋势） | 指标 | 持续质量_gate |
+| P2 | ~~质量指标门禁（复杂度/重复率/SAST 趋势）~~ → 已完成：`qa/metrics_gate.py` + CI `metrics` 作业（单文件决策点 ≤120、unsafe ≤1600、重复率 ≤20%、测试块 ≥90、extern/panic/abort/raise 恒为 0） | 指标 | 持续质量门禁、拦阶跃式恶化（**已完成**） |
 | P3 | 跨实现（vs Julia）对拍集成测试显式化 | 集成/契约 | 上游同步保障 |
 | P3 | README 示例提升为 doc-test | API | 文档永不过期 |
 
@@ -300,7 +309,25 @@ python qa/qa_analysis.py        # 输出结构化 JSON
 - **不另设 CI 作业**：套件是普通 `test` 块，直接落入四目标 `test` 矩阵，门禁天然覆盖；固定种子保证可复现、无 flakiness。
 - **本地复现**：`moon test --target native`（或 js / wasm / wasm-gc）。
 
-### 6.5 端口 CI 现状（`.github/workflows/ci.yml`）
+### 6.5 质量指标门禁（`qa/metrics_gate.py` + `metrics` 作业）
+- **原理**：封装 `qa/qa_analysis.py` 的 `analyze()`（本轮改为可复用模块 + `__main__` 保留 CLI），把原本“一次性人工测算”的指标变成**每次 CI 都执行的门禁**。
+- **门禁项（默认值按基线留足余量，只拦阶跃式恶化）**：
+
+| 指标 | 当前基线 | 默认阈值 | 语义 |
+|------|---------|---------|------|
+| 单文件决策点（最高文件） | 102（`alg_fbdf.mbt`） | ≤ 120 | 拦新增巨型模块 |
+| `unsafe_get`/`unsafe_set` 调用点 | 1051 | ≤ 1600 | 拦越界访问失控增长 |
+| 重复率（5 行窗口） | 10.9%（1737/15981） | ≤ 20.0% | 拦复制粘贴蔓延 |
+| `test` 块数 | 98 | ≥ 90 | 拦测试被删 |
+| `extern` / `panic` / `abort` / `raise` | 0 / 0 / 0 / 0 | 恒 = 0 | 架构不变量：零 FFI、零 panic（错误走 `Retcode`） |
+
+- **阈值可调**：`--max-decisions` / `--max-unsafe` / `--max-dup-rate` / `--min-test-blocks` / `--max-extern` 等；有意引入 FFI 时可显式放宽而非删掉门禁。
+- **无需 MoonBit 工具链**：纯 Python 标准库、直接分析源码，作业最轻。
+- **产出**：写 `GITHUB_STEP_SUMMARY`（含 Top-5 复杂度热点）+ `qa/metrics.json` artifact（可跨运行比对趋势）。
+- **退出码语义**：0=通过；1=门禁违反（列出每项越界）；2=分析失败。
+- **本地复现**：`python3 qa/metrics_gate.py`（加 `--max-decisions 50` 可验证失败分支）。
+
+### 6.6 端口 CI 现状（`.github/workflows/ci.yml`）
 | 作业 | 作用 | 门禁 |
 |------|------|------|
 | `test` ×4 | native/js/wasm/wasm-gc 四目标 `moon test`（含 `fuzz_test.mbt` 随机化套件） | 测试全绿 |
@@ -308,6 +335,7 @@ python qa/qa_analysis.py        # 输出结构化 JSON
 | `coverage` | 插桩测试 + 覆盖率门禁 + HTML 上报 | ≥90% 整体 / ≥80% 单模块 |
 | `dependency-pin` | 精确版本钉守卫 | 无未钉外部依赖 |
 | `benchmark` | native/release 跑 `moon bench` + 解析/汇总 + JSON artifact | 单基准 ≤50ms 合理性预算 |
+| `metrics` | 复杂度/重复率/不变量门禁 + JSON artifact（纯 Python，无需 MoonBit） | 见上方阈值表 |
 
 ---
 

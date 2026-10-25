@@ -82,3 +82,19 @@ jobs:
         with:
           name: bench-results
           path: qa/bench_results.json
+
+  metrics:
+    name: Quality metrics gate
+    runs-on: ubuntu-latest
+    steps:
+      # No MoonBit toolchain needed: the gate analyzes sources directly and
+      # uses only the Python standard library.
+      - uses: actions/checkout@v4
+      - name: Complexity / duplication / invariant gate
+        run: python3 qa/metrics_gate.py --json-out qa/metrics.json
+      - name: Upload metrics JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-metrics
+          path: qa/metrics.json
