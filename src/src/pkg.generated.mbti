@@ -1,0 +1,557 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "riantr/ordinarydiffeq"
+
+// Values
+pub const BDF_COEFFS_COLS : Int32 = 6
+
+pub const BDF_COEFFS_ROWS : Int32 = 6
+
+pub const FBDF_DEFAULT_MAX_ORDER : Int32 = 5
+
+pub const FBDF_HISTORY_SLOTS : Int32 = 7
+
+pub const RODAS5P_JAC_GAMMA_TOL : Double = 0.03
+
+pub const RODAS5P_MAX_JAC_AGE : Int32 = 20
+
+pub const ROSENBROCK23_JAC_GAMMA_TOL : Double = 0.03
+
+pub const ROSENBROCK23_MAX_JAC_AGE : Int32 = 1
+
+pub fn accept_step_controller(Integrator) -> Bool
+
+pub fn backdiff(Array[Double], Array[Double], Array[Double], Int32) -> Unit
+
+pub fn bary_weights(Int32) -> Array[Double]
+
+pub fn bdf_coeffs_row(Int32) -> Array[Double]
+
+pub fn bdf_leading_coeff(Int32) -> Double
+
+pub fn bdf_restart(FBDFCache) -> Unit
+
+pub fn bs3() -> ExplicitRKTableau
+
+pub fn build_w(StiffCache, Integrator, Double, Double, Int32, () -> Unit) -> Bool
+
+pub fn calc_dt_propose(Integrator, Double) -> Unit
+
+pub fn calc_finite_difference_weights(Array[Double], Array[Double], Double, Int32, Int32) -> Unit
+
+pub fn cheb_nodes(Int32) -> Array[Double]
+
+pub fn copy_array(Array[Double]) -> Array[Double]
+
+pub fn copy_into(Array[Double], Array[Double]) -> Unit
+
+pub fn determine_initdt(Integrator, Int32) -> Double
+
+pub fn dmax(Double, Double) -> Double
+
+pub fn dmin(Double, Double) -> Double
+
+pub fn dormand_prince() -> ExplicitRKTableau
+
+pub let e : Double
+
+pub let eps : Double
+
+pub fn eval_lagrange(Array[Double], Double, Array[Double], Array[Array[Double]], Int32) -> Unit
+
+pub fn eval_poly_derivative(Double, Array[Double], Int32) -> Double
+
+pub fn fastpower(Double, Double) -> Double
+
+pub fn fbdf_derivative(Double, Double, Array[Double], Array[Double], Array[Array[Double]], Array[Double]) -> Unit
+
+pub fn fbdf_interpolate(Double, Double, Array[Double], Array[Double], Array[Array[Double]], Array[Double]) -> Unit
+
+pub fn fd_step(Double) -> Double
+
+pub fn fd_step_t(Double, Double) -> Double
+
+pub fn generic_rk_interpolate(Double, Double, Array[Double], Array[Array[Double]], Array[Array[Double]], Int32, Array[Double]) -> Unit
+
+pub fn hermite_derivative(Array[Double], Array[Double], Array[Double], Array[Double], Double, Double, Array[Double]) -> Unit
+
+pub fn hermite_interpolate(Array[Double], Array[Double], Array[Double], Array[Double], Double, Double, Array[Double]) -> Unit
+
+pub fn heun() -> ExplicitRKTableau
+
+pub fn imax(Int32, Int32) -> Int32
+
+pub fn imin(Int32, Int32) -> Int32
+
+pub fn inf_norm(Array[Double]) -> Double
+
+pub fn is_finite(Double) -> Bool
+
+pub fn jacobian2w(Array[Double], Array[Double], Int32, Double) -> Unit
+
+pub fn jacobian_analytic(Double, Array[Double], (Double, Array[Double], Array[Double]) -> Unit, Array[Double]) -> Unit
+
+pub fn jacobian_fd(Integrator, Double, Array[Double], Array[Double], Array[Double], Array[Double], Array[Double]) -> Unit
+
+pub fn lagrange_basis_deriv(Double, Int32, Int32) -> Double
+
+pub fn lagrange_basis_scalar(Double, Int32, Array[Double], Int32) -> Double
+
+pub fn lincomb1(Array[Double], Array[Double], Double, Array[Double]) -> Unit
+
+pub fn lincomb2(Array[Double], Array[Double], Double, Array[Double], Double, Array[Double]) -> Unit
+
+pub fn lincomb3(Array[Double], Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double]) -> Unit
+
+pub fn lincomb4(Array[Double], Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double]) -> Unit
+
+pub fn lincomb5(Array[Double], Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double]) -> Unit
+
+pub fn lincomb6(Array[Double], Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double]) -> Unit
+
+pub fn lincomb7(Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double]) -> Unit
+
+pub fn lincomb8(Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double], Double, Array[Double]) -> Unit
+
+pub fn lincomb_range(Array[Double], Array[Double], Array[Double], Array[Array[Double]]) -> Unit
+
+pub fn linear_derivative(Solution, Double, Array[Double]) -> Unit
+
+pub fn linear_interp(Array[Double], Array[Double], Double, Array[Double]) -> Unit
+
+pub fn lu_factor(Array[Double], Int32, Array[Int32]) -> Bool
+
+pub fn lu_solve(Array[Double], Array[Int32], Array[Double]) -> Unit
+
+pub fn lu_solve_once(Array[Double], Array[Double]) -> Bool
+
+pub fn reinit_fbdf(Integrator, FBDFCache) -> Unit
+
+pub fn rk4() -> ExplicitRKTableau
+
+pub fn rkf4() -> ExplicitRKTableau
+
+pub fn rms_norm(Array[Double]) -> Double
+
+pub fn search_interval(Array[Double], Double) -> Int32
+
+pub fn[A : Solver] solve(OdeProblem, A, SolveOptions) -> Solution
+
+pub fn sqrt(Double) -> Double
+
+pub fn stald_check(StaldState, Int32) -> Bool
+
+pub fn stald_collect_data(StaldState, Int32, Double, Double, Double) -> Unit
+
+pub fn stald_reset(StaldState) -> Unit
+
+pub fn step_accept_controller(Integrator, Double) -> Double
+
+pub fn step_reject_controller(Integrator) -> Unit
+
+pub fn stepsize_controller(Integrator) -> Double
+
+pub fn tderivative_fd(Integrator, Double, Array[Double], Array[Double], Array[Double], Array[Double]) -> Unit
+
+pub fn w_solve(StiffCache, Array[Double]) -> Unit
+
+pub fn weighted_residual(Array[Double], Array[Double], Array[Double], Array[Double], Double, Double) -> Unit
+
+// Errors
+
+// Types and methods
+pub struct Euler {
+}
+pub fn Euler::fill_dense_stages(Self, Integrator) -> Unit
+pub fn Euler::interpolant(Self) -> SolutionInterp
+pub fn Euler::is_fsal(Self) -> Bool
+pub fn Euler::needs_fsal_reset_fixed_step(Self) -> Bool
+pub fn Euler::new() -> Self
+pub fn Euler::order(Self) -> Int32
+pub fn Euler::perform_step(Self, Integrator) -> Unit
+pub fn Euler::stage_count(Self) -> Int32
+pub fn Euler::uses_bdf_controllers(Self) -> Bool
+pub impl Solver for Euler
+
+pub struct ExplicitRK {
+  tab : ExplicitRKTableau
+}
+pub fn ExplicitRK::fill_dense_stages(Self, Integrator) -> Unit
+pub fn ExplicitRK::interpolant(Self) -> SolutionInterp
+pub fn ExplicitRK::is_fsal(Self) -> Bool
+pub fn ExplicitRK::needs_fsal_reset_fixed_step(Self) -> Bool
+pub fn ExplicitRK::new(ExplicitRKTableau) -> Self
+pub fn ExplicitRK::order(Self) -> Int32
+pub fn ExplicitRK::perform_step(Self, Integrator) -> Unit
+pub fn ExplicitRK::stage_count(Self) -> Int32
+pub fn ExplicitRK::tableau(Self) -> ExplicitRKTableau
+pub fn ExplicitRK::uses_bdf_controllers(Self) -> Bool
+pub impl Solver for ExplicitRK
+
+pub(all) struct ExplicitRKTableau {
+  a : Array[Array[Double]]
+  c : Array[Double]
+  alpha : Array[Double]
+  alpha_eest : Array[Double]
+  stages : Int32
+  order : Int32
+  adaptive_order : Int32
+  fsal : Bool
+}
+
+pub struct FBDF {
+  max_order : Int32
+}
+pub fn FBDF::fill_dense_stages(Self, Integrator) -> Unit
+pub fn FBDF::interpolant(Self) -> SolutionInterp
+pub fn FBDF::is_fsal(Self) -> Bool
+pub fn FBDF::needs_fsal_reset_fixed_step(Self) -> Bool
+pub fn FBDF::new() -> Self
+pub fn FBDF::order(Self) -> Int32
+pub fn FBDF::perform_step(Self, Integrator) -> Unit
+pub fn FBDF::stage_count(Self) -> Int32
+pub fn FBDF::uses_bdf_controllers(Self) -> Bool
+pub fn FBDF::with_max_order(Int32) -> Self
+pub impl Solver for FBDF
+
+pub(all) struct FBDFCache {
+  mut ts : Array[Double]
+  mut u_history : Array[Array[Double]]
+  mut u_corrector : Array[Array[Double]]
+  mut order : Int32
+  mut prev_order : Int32
+  mut max_order : Int32
+  mut consfailcnt : Int32
+  mut nconsteps : Int32
+  mut iters_from_event : Int32
+  mut qwait : Int32
+  mut terkm2 : Double
+  mut terkm1 : Double
+  mut terk : Double
+  mut terkp1 : Double
+  mut filter_order : Int32
+  mut restart_pending : Bool
+  mut bdf_coeffs : Array[Double]
+  mut r : Array[Double]
+  mut ts_tmp : Array[Double]
+  mut fd_weights : Array[Double]
+  mut pred_thetas : Array[Double]
+  mut u0 : Array[Double]
+  mut terkp1_tmp : Array[Double]
+  mut terk_tmp : Array[Double]
+  mut z : Array[Double]
+  mut tmp : Array[Double]
+  mut ztmp : Array[Double]
+  mut ztmp2 : Array[Double]
+  mut dz : Array[Double]
+  mut atmp : Array[Double]
+  mut nlk : Array[Double]
+  mut beta0 : Double
+  mut alpha : Double
+  mut kappa : Double
+  mut max_iter : Int32
+  mut new_w_dt_cutoff : Double
+  mut etaold : Double
+  mut prev_theta : Double
+  mut nliter : Int32
+  mut nlstatus : Int32
+  mut nfails : Int32
+  mut new_w : Bool
+  mut w_gdt : Double
+  mut j_t : Double
+  mut firstcall : Bool
+  mut firststage : Bool
+  mut stiff : StiffCache
+  mut stald : StaldState
+  mut ready : Bool
+  mut dim : Int32
+}
+pub fn FBDFCache::coeff(Self, Int32, Int32) -> Double
+pub fn FBDFCache::ensure(Self, Int32) -> Bool
+pub fn FBDFCache::new() -> Self
+
+pub struct Integrator {
+  mut t : Double
+  mut tprev : Double
+  tdir : Double
+  tf : Double
+  mut dt : Double
+  mut dtpropose : Double
+  mut dtcache : Double
+  mut u : Array[Double]
+  mut uprev : Array[Double]
+  f : OdeFunction
+  mut fsalfirst : Array[Double]
+  mut fsallast : Array[Double]
+  mut k : Array[Array[Double]]
+  mut tmp : Array[Double]
+  mut utilde : Array[Double]
+  mut atmp : Array[Double]
+  mut stiff : StiffCache
+  mut bdf : FBDFCache
+  mut bdf_active : Bool
+  mut force_stepfail : Bool
+  mut stiff_bufs : Array[Array[Double]]
+  mut est : Double
+  mut controller : PIController
+  mut success_iter : Int32
+  mut is_fsal : Bool
+  mut iter : Int32
+  mut nf : Int32
+  mut accept_step : Bool
+  mut last_stepfail : Bool
+  mut just_hit_tstop : Bool
+  mut next_step_tstop : Bool
+  mut tstop_target : Double
+  mut opts : SolveOptions
+  mut tstops : Array[Double]
+  mut tstop_idx : Int32
+  mut saveat : Array[Double]
+  mut saveat_idx : Int32
+  mut saveiter : Int32
+  mut sol : Solution
+}
+pub fn Integrator::dtmin(Self) -> Double
+pub fn Integrator::eval_f(Self, Double, Array[Double], Array[Double]) -> Unit
+pub fn Integrator::eval_f_uncounted(Self, Double, Array[Double], Array[Double]) -> Unit
+pub fn Integrator::first_tstop(Self) -> Double
+pub fn Integrator::has_tstop(Self) -> Bool
+pub fn Integrator::new(OdeProblem, SolveOptions, Int32, Int32) -> Self
+pub fn Integrator::pop_tstop(Self) -> Unit
+pub fn Integrator::stiff_vec(Self, Int32) -> Array[Double]
+
+pub enum OdeFunction {
+  Iip((Double, Array[Double], Array[Double]) -> Unit)
+  Oop((Double, Array[Double]) -> Array[Double])
+}
+pub fn OdeFunction::eval_into(Self, Double, Array[Double], Array[Double]) -> Unit
+
+pub struct OdeProblem {
+  t0 : Double
+  tf : Double
+  u0 : Array[Double]
+  f : OdeFunction
+}
+pub fn OdeProblem::iip(Double, Double, Array[Double], (Double, Array[Double], Array[Double]) -> Unit) -> Self
+pub fn OdeProblem::oop(Double, Double, Array[Double], (Double, Array[Double]) -> Array[Double]) -> Self
+
+pub struct PIController {
+  mut q11 : Double
+  mut errold : Double
+  beta1 : Double
+  beta2 : Double
+  qoldinit : Double
+  qmin : Double
+  qmax : Double
+  qmax_first_step : Double
+  gamma : Double
+  qsteady_min : Double
+  qsteady_max : Double
+}
+pub fn PIController::for_order(Int32) -> Self
+
+pub enum Retcode {
+  Success
+  MaxIters
+  DtMinUnstable
+  Unstable
+  InitialFailure
+}
+pub fn Retcode::equal(Self, Self) -> Bool
+pub fn Retcode::is_dtmin_unstable(Self) -> Bool
+pub fn Retcode::is_initial_failure(Self) -> Bool
+pub fn Retcode::is_maxiters(Self) -> Bool
+pub fn Retcode::is_success(Self) -> Bool
+pub fn Retcode::is_unstable(Self) -> Bool
+pub fn Retcode::not_equal(Self, Self) -> Bool
+pub impl Eq for Retcode
+
+pub struct Rodas5P {
+  tableau : Rodas5PTableau
+}
+pub fn Rodas5P::fill_dense_stages(Self, Integrator) -> Unit
+pub fn Rodas5P::interpolant(Self) -> SolutionInterp
+pub fn Rodas5P::is_fsal(Self) -> Bool
+pub fn Rodas5P::needs_fsal_reset_fixed_step(Self) -> Bool
+pub fn Rodas5P::new() -> Self
+pub fn Rodas5P::order(Self) -> Int32
+pub fn Rodas5P::perform_step(Self, Integrator) -> Unit
+pub fn Rodas5P::stage_count(Self) -> Int32
+pub fn Rodas5P::tableau(Self) -> Rodas5PTableau
+pub fn Rodas5P::uses_bdf_controllers(Self) -> Bool
+pub impl Solver for Rodas5P
+
+pub struct Rodas5PTableau {
+  a : Array[Double]
+  cmat : Array[Double]
+  c : Array[Double]
+  d : Array[Double]
+  h : Array[Double]
+  b : Array[Double]
+  btilde : Array[Double]
+  gamma : Double
+  num_stages : Int32
+  h_rows : Int32
+}
+pub fn Rodas5PTableau::new() -> Self
+
+pub struct Rosenbrock23 {
+}
+pub fn Rosenbrock23::fill_dense_stages(Self, Integrator) -> Unit
+pub fn Rosenbrock23::interpolant(Self) -> SolutionInterp
+pub fn Rosenbrock23::is_fsal(Self) -> Bool
+pub fn Rosenbrock23::needs_fsal_reset_fixed_step(Self) -> Bool
+pub fn Rosenbrock23::new() -> Self
+pub fn Rosenbrock23::order(Self) -> Int32
+pub fn Rosenbrock23::perform_step(Self, Integrator) -> Unit
+pub fn Rosenbrock23::stage_count(Self) -> Int32
+pub fn Rosenbrock23::tableau(Self) -> Rosenbrock23Tableau
+pub fn Rosenbrock23::uses_bdf_controllers(Self) -> Bool
+pub impl Solver for Rosenbrock23
+
+pub struct Rosenbrock23Tableau {
+  c32 : Double
+  d : Double
+}
+pub fn Rosenbrock23Tableau::new() -> Self
+
+pub struct Solution {
+  mut t : Array[Double]
+  mut u : Array[Array[Double]]
+  mut k : Array[Array[Array[Double]]]
+  mut retcode : Retcode
+  mut interp : SolutionInterp
+  mut nf : Int32
+}
+pub fn Solution::call(Self, Double) -> Array[Double]
+pub fn Solution::derivative(Self, Double) -> Array[Double]
+pub fn Solution::push(Self, Double, Array[Double]) -> Unit
+pub fn Solution::push_ks(Self, Array[Array[Double]]) -> Unit
+
+pub enum SolutionInterp {
+  Linear
+  Hermite
+  Poly((Double, Double, Array[Double], Array[Double], Array[Array[Double]], Array[Double]) -> Unit, (Double, Double, Array[Double], Array[Double], Array[Array[Double]], Array[Double]) -> Unit)
+}
+
+pub struct SolveOptions {
+  dt : Double
+  adaptive : Bool
+  reltol : Double
+  abstol : Double
+  maxiters : Int32
+  mut dtmax : Double
+  mut dtmin : Double
+  mut dense : Bool
+  mut save_everystep : Bool
+  mut save_start : Bool
+  mut save_end : Bool
+  saveat : Array[Double]
+  tstops : Array[Double]
+}
+pub fn SolveOptions::new() -> Self
+pub fn SolveOptions::with_abstol(Self, Double) -> Self
+pub fn SolveOptions::with_adaptive(Self, Bool) -> Self
+pub fn SolveOptions::with_dense(Self, Bool) -> Self
+pub fn SolveOptions::with_dt(Self, Double) -> Self
+pub fn SolveOptions::with_dtmax(Self, Double) -> Self
+pub fn SolveOptions::with_dtmin(Self, Double) -> Self
+pub fn SolveOptions::with_maxiters(Self, Int32) -> Self
+pub fn SolveOptions::with_reltol(Self, Double) -> Self
+pub fn SolveOptions::with_saveat(Self, Array[Double]) -> Self
+pub fn SolveOptions::with_tstops(Self, Array[Double]) -> Self
+
+pub(all) struct StaldState {
+  mut ssdat : Array[Double]
+  mut nscon : Int32
+  mut nor : Int32
+  mut enabled : Bool
+  mut last_order : Int32
+  mut rrcut : Double
+  mut vrrtol : Double
+  mut vrrt2 : Double
+  mut sqtol : Double
+  mut rrtol : Double
+  mut tiny : Double
+  mut smax : Array[Double]
+  mut ssmax : Array[Double]
+  mut rav : Array[Double]
+  mut vrat : Array[Double]
+  mut rat : Array[Double]
+  mut qc : Array[Double]
+  mut qco : Array[Double]
+  mut drr : Array[Double]
+  mut rrc : Array[Double]
+  mut sigsq : Array[Double]
+}
+pub fn StaldState::new() -> Self
+
+pub(all) struct StiffCache {
+  mut jac : Array[Double]
+  mut w : Array[Double]
+  mut ipiv : Array[Int32]
+  mut dT : Array[Double]
+  mut saved_dT : Array[Double]
+  mut saved_dtgamma : Double
+  mut jac_refreshed : Bool
+  mut last_naccept : Int32
+  mut jac_dtgamma : Double
+  mut jac_valid : Bool
+  mut ready : Bool
+  mut dim : Int32
+}
+pub fn StiffCache::ensure(Self, Int32) -> Bool
+pub fn StiffCache::invalidate(Self) -> Unit
+pub fn StiffCache::new() -> Self
+
+pub struct Tsit5 {
+}
+pub fn Tsit5::fill_dense_stages(Self, Integrator) -> Unit
+pub fn Tsit5::interpolant(Self) -> SolutionInterp
+pub fn Tsit5::is_fsal(Self) -> Bool
+pub fn Tsit5::needs_fsal_reset_fixed_step(Self) -> Bool
+pub fn Tsit5::new() -> Self
+pub fn Tsit5::order(Self) -> Int32
+pub fn Tsit5::perform_step(Self, Integrator) -> Unit
+pub fn Tsit5::stage_count(Self) -> Int32
+pub fn Tsit5::uses_bdf_controllers(Self) -> Bool
+pub impl Solver for Tsit5
+
+pub struct Vern7 {
+}
+pub fn Vern7::fill_dense_stages(Self, Integrator) -> Unit
+pub fn Vern7::interpolant(Self) -> SolutionInterp
+pub fn Vern7::is_fsal(Self) -> Bool
+pub fn Vern7::needs_fsal_reset_fixed_step(Self) -> Bool
+pub fn Vern7::new() -> Self
+pub fn Vern7::order(Self) -> Int32
+pub fn Vern7::perform_step(Self, Integrator) -> Unit
+pub fn Vern7::stage_count(Self) -> Int32
+pub fn Vern7::uses_bdf_controllers(Self) -> Bool
+pub impl Solver for Vern7
+
+pub struct Vern9 {
+}
+pub fn Vern9::fill_dense_stages(Self, Integrator) -> Unit
+pub fn Vern9::interpolant(Self) -> SolutionInterp
+pub fn Vern9::is_fsal(Self) -> Bool
+pub fn Vern9::needs_fsal_reset_fixed_step(Self) -> Bool
+pub fn Vern9::new() -> Self
+pub fn Vern9::order(Self) -> Int32
+pub fn Vern9::perform_step(Self, Integrator) -> Unit
+pub fn Vern9::stage_count(Self) -> Int32
+pub fn Vern9::uses_bdf_controllers(Self) -> Bool
+pub impl Solver for Vern9
+
+// Type aliases
+
+// Traits
+pub trait Solver {
+  fn order(Self) -> Int32
+  fn is_fsal(Self) -> Bool
+  fn stage_count(Self) -> Int32
+  fn perform_step(Self, Integrator) -> Unit
+  fn interpolant(Self) -> SolutionInterp
+  fn fill_dense_stages(Self, Integrator) -> Unit
+  fn needs_fsal_reset_fixed_step(Self) -> Bool
+  fn uses_bdf_controllers(Self) -> Bool
+}

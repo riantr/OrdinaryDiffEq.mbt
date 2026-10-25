@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    name: Test (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [native, js, wasm-gc]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        uses: moonbitlang/install-moon@v0
+      - name: Test
+        working-directory: src
+        run: moon test --target ${{ matrix.target }}
+
+  check:
+    name: moon check / fmt / info
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        uses: moonbitlang/install-moon@v0
+      - name: moon check
+        working-directory: src
+        run: moon check
+      - name: moon fmt (check)
+        working-directory: src
+        run: moon fmt --check
+      - name: moon info (regenerate)
+        working-directory: src
+        run: moon info

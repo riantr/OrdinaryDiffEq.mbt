@@ -1,0 +1,11 @@
+# MoonBit build artifacts
+_build/
+.mooncakes/
+target/
+*.mbc
+
+# Editors
+.idea/
+.vscode/
+*.swp
+.DS_Store

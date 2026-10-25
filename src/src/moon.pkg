@@ -1,0 +1,9 @@
+pkgtype(kind: "library")
+
+import {
+  "moonbitlang/core/bench",
+  "moonbitlang/core/double",
+  "moonbitlang/core/math",
+}
+
+warnings = "-missing_doc-unused_value-unused_constructor-unused_trait_bound-unused_package-missing_priv-redundant_modifier"
