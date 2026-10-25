@@ -14,15 +14,15 @@
 | 单元测试（native 目标） | ✅ **150 个断言 / 91 个 `test` 块，全部通过**，运行 ~1s |
 | 测试矩阵 | ✅ CI 已覆盖 `native / js / wasm / wasm-gc` 四目标 |
 | 代码覆盖率（native） | 🟢 **91.0% 行块覆盖**（22/22 含可执行代码的模块均被覆盖；弱点在 `bdf_utils` 56%、`dense` 66%）｜CI 已加门禁（≥90% 整体 / ≥80% 单模块）+ HTML 上报 |
-| 显式错误处理 | 🔴 **0 处**：无 `panic`/`abort`/`raise`/Result 传播，越界/奇异矩阵以运行时 panic 或静默 NaN 暴露 |
+| 显式错误处理 | 🟢 已有基于 `Retcode` 的返回码体系（`Success/MaxIters/DtMinUnstable/Unstable/InitialFailure`）：`check_error`（`solve.mbt:75`）每迭代检查并在非 Success 立即返回；`lu_factor`（`linalg_lu.mbt:43`）对奇异/NaN 主元返回 `false` 转步失败；全代码**无 `panic`/`abort`/`raise` 关键字**（错误以返回码表达，符合 SciML `sol.retcode` 约定） |
 | 安全敏感代码 | 🟡 `unsafe_get/unsafe_set` 出现 **1051 次**（数值内核普遍未做边界检查）；端口内 `extern`=0、FFI=无 |
 | 依赖与供应链 | 🟢 仅 `depprobe2` 引入外部包 `riantr/moonbit_image@0.3.7`（**已精确钉 `@0.3.7`**）；MoonBit 无 `moon-lock.json`（版本直接钉在 `moon.mod`）；CI 加 `deps_check.py` 钉版本守卫；Python 工具仅用标准库 |
 | 性能/基准 | 🟢 有 `bench_test.mbt`（用 `core/bench`）；**端口 CI 已加 `benchmark` 作业 + 50ms 合理性预算门**，JSON 结果上传 artifact（精确回归阈值待建基线；仅 Julia 侧有 `benchmark.yml`） |
-| Fuzz / Gherkin / 负载 | 🔴 全部缺失（对数值库属可选/低优先，但 Fuzz 价值高） |
+| Fuzz / Gherkin / 负载 | 🟡 **Fuzz/属性测试已落地**（`src/src/fuzz_test.mbt`，7 个随机化测试，随四目标 `test` 矩阵运行）；Gherkin 数值库低优先、有意不做；负载不适用 |
 | 重复代码 | 🟡 结构性重复为主：`alg_vern7`/`alg_vern9` 共享 **109** 个相同 5 行片段；求解器脚手架跨 8 文件重复；测试样板跨 10 文件重复 |
 | 指标门禁 | 🔴 无自动复杂度/重复率/质量门禁（本次为一次性测算） |
 
-**总体判断**：端口的**功能正确性质量很高**（四目标全绿、覆盖率 91%、数值契约对齐上游），且**工程化 QA 门禁已较完整**——测试矩阵、类型检查、覆盖率门禁+上报、依赖钉版本守卫、基准 CI 均已落地。剩余弱项集中在**错误健壮性（裸 panic / 静默 NaN）**、**Fuzz / 属性测试**、**自动质量指标门禁（复杂度/重复率趋势）** 与**精确性能回归阈值（需基线）**。下面的 16 维度逐项给出证据与修复路线。
+**总体判断**：端口的**功能正确性质量很高**（四目标全绿、覆盖率 91%、数值契约对齐上游），且**工程化 QA 门禁已较完整**——测试矩阵、类型检查、覆盖率门禁+上报、依赖钉版本守卫、基准 CI、Fuzz/属性测试均已落地；错误以 `Retcode` 返回码表达（无裸 panic）。剩余弱项集中在**自动质量指标门禁（复杂度/重复率趋势）**、**精确性能回归阈值（需基线）** 与**跨实现（vs Julia）集成比对显式化**。下面的 16 维度逐项给出证据与修复路线。
 
 ---
 
@@ -43,7 +43,7 @@
 | 9 | Gherkin（BDD） | 🔴 | 全工作区无 `.feature`；数值库低优先，可不做 |
 | 10 | E2E（端到端） | 🟡 | 四目标（native/js/wasm/wasm-gc）运行即多平台 E2E；无“应用级”E2E（`mbgui` 有 smoke_test） |
 | 11 | 覆盖率（Coverage） | 🟢 | 91% 行块覆盖；**CI 已加门禁（≥90% 整体 / ≥80% 单模块，bdf_utils/dense 豁免）+ HTML 上报 artifact**；`bdf_utils`/`dense` 偏低 |
-| 12 | Fuzz（模糊） | 🔴 | 无任何模糊/属性测试；数值鲁棒性（NaN/Inf/病态矩阵/dtmin）无保障 |
+| 12 | Fuzz（模糊） | 🟢 | `src/src/fuzz_test.mbt` 已加 7 个确定性随机化测试（xorshift64 PRNG + 属性/模糊）：线性衰减精度、常数 RHS 精确性、谐振子能量守恒、Tsit5↔Vern9 一致性、固定步确定性、随机多项式 RHS 不崩溃、刚性显式求解干净失败；随四目标 `moon test` 矩阵运行 |
 | 13 | 性能（Performance） | 🟢 | 有 `bench_test`；**CI 已加 `benchmark` 作业（native/release）+ 50ms 合理性预算门**，JSON 结果上传 artifact 供趋势追踪；精确回归阈值待建基线 |
 | 14 | 负载（Load） | ⚪ | 非服务类库，无并发/吞吐面；大规模 N 的内存/稳定性未测（低优先） |
 | 15 | 重复代码（Duplication） | 🟡 | 多为代码生成家族的结构性重复（可接受），但测试样板与求解器脚手架可抽公共helper |
@@ -194,12 +194,18 @@
   2. 针对 `bdf_utils`/`dense` 补分支测试：变阶切换、插值边界、步长拒绝路径（提升这两处覆盖率，争取移除豁免）。
   3. ~~将覆盖率报告上传~~ → 已完成（GitHub Actions `coverage-report` artifact + `GITHUB_STEP_SUMMARY` PR 摘要）。
 
-### 12) Fuzz 🔴（高价值）
-- **发现**：无任何模糊/属性测试。数值鲁棒性（随机 IVP、病态 Jacobian、NaN/Inf 注入、dtmin 触发、极大/极小 tspan）无自动化保障。
-- **建议**（优先级高）：
-  1. 对 `solve()` 做**属性测试**：守恒量不变、时间单调性、固定步长误差阶、解在已知解析解附近。
-  2. 引入轻量模糊：随机 `u0`/`tspan`/`reltol`/`abstol` 组合，断言不 panic、不产生非有限值（除非问题本身奇异并已文档化）。
-  3. 将“非有限值/越界”显式转为可控错误（见错误健壮性问题）而非裸 panic。
+### 12) Fuzz 🟢（已落地）
+- **发现（原 🔴）**：无任何模糊/属性测试。本会话已补齐——新增 `src/src/fuzz_test.mbt`，用**确定性 xorshift64 PRNG**（固定种子）生成随机输入，共 **7 个随机化 `test` 块**，覆盖约 1160 次随机求解。
+- **已实现的属性 / 模糊**：
+  1. 标量线性衰减 `u' = -a u`：自适应解须有限、时间单调，并满足容差契约（混合绝对+相对界，避免解衰减到 ~1e-22 时纯相对误差发散）。
+  2. 常数 RHS `u' = c`：仿射解析解，端点误差 < 1e-9。
+  3. 谐振子 `u' = Ju`（旋转）：能量 ∥u∥² 守恒，相对漂移 < 1e-2。
+  4. 光滑多项式 RHS `u' = a·t² − b·t + c`：Tsit5 与 Vern9 端点解一致 < 1e-7（跨方法交叉校验，捕获静默错误）。
+  5. 固定步可复现性：同一问题两次求解位级一致（防隐藏全局/种子状态）。
+  6. 随机有界多项式 RHS（`u' = c0 + c1·u + c2·u²`，|ci|≤0.5）：**永不崩溃**，返回已知返回码、时间单调；若 `Success` 则状态有限且落点 = `tf`。
+  7. 刚性显式求解（`u' = -k·u`, k 至 1e7）：须“干净失败”（`DtMinUnstable`/`Unstable`），**绝不崩溃 / 挂起 / 返回未知状态**。
+- **工程化**：套件随四目标 `moon test` 矩阵运行（无独立 CI 作业），门禁天然覆盖；PRNG 固定种子 → 结果可复现、CI 无 flakiness。
+- **残留（低优先）**：无 coverage-guided fuzzing（MoonBit 无 libFuzzer 前端，此为随机化测试的等价替代）；奇异矩阵与 NaN 仍归到 `Unstable` 兜底码，未细分诊断。
 
 ### 13) 性能 🟢（CI 作业已加，精确回归待基线）
 - **发现**：有 `bench_test.mbt`（基于 `core/bench`，8 个基准：TSIT5/Vern7/Rosenbrock23/Rodas5P/FBDF × decay/van der Pol/stiff）。**端口 CI 已于 2026-10-25 加 `benchmark` 作业**（native/release 跑 `moon bench` + `qa/bench_report.py` 解析/汇总），并设 **50ms/基准的“合理性预算”硬门**（捕获灾难性回归/近死循环，而非精密回归阈值——绝对耗时随 runner 波动，紧阈值会误报）；结果 JSON 作为 artifact 上传，支持跨运行趋势比对。Julia 侧有成熟 `benchmark.yml` + `DiffEqDevTools`。
@@ -234,8 +240,8 @@
 |-------|------|------|---------|
 | P0 | ~~提交 `moon-lock.json`~~ → MoonBit 无 lockfile；改用 `deps_check.py` 精确版本钉守卫 + 锁定 `riantr/moonbit_image@0.3.7` | 依赖 | 可复现性、供应链稳定（**已完成**） |
 | P0 | CI 加覆盖率门禁（≥90% 整体 / ≥80% 单模块，bdf_utils/dense 豁免）+ HTML 上报 | 覆盖率 | 防止回归、可视化趋势（**已完成**） |
-| P1 | 引入 Fuzz/属性测试（NaN/Inf/dtmin/随机 IVP） | Fuzz/健壮性 | 捕获静默错误与崩溃 |
-| P1 | 显式错误健壮层（非有限值/奇异矩阵→可控错误而非裸 panic） | SAST/运行时 | 可观测、可恢复 |
+| P1 | ~~引入 Fuzz/属性测试~~ → 已完成（`src/src/fuzz_test.mbt`，7 个随机化测试，随四目标矩阵） | Fuzz/健壮性 | 捕获静默错误与崩溃（**已完成**） |
+| P1 | ~~显式错误健壮层~~ → 已有 `Retcode` 返回码体系（`solve.mbt` 每迭代 `check_error`、`lu_factor` 奇异/NaN 主元返回 `false` 转步失败），错误以返回码而非裸 panic 表达（符合 SciML `sol.retcode` 约定） | SAST/运行时 | 可观测、可恢复（**已完成**；仅奇异/NaN 细分诊断待补） |
 | P1 | 端口基准 CI（合理性预算门）+ JSON 趋势 artifact | 性能 | 防止灾难性性能退化（**已完成**；精密回归阈值待基线） |
 | P2 | 测试样板/Verner 内核抽公共 helper | 重复代码 | 可维护性 |
 | P2 | 质量指标门禁（复杂度/重复率/SAST 趋势） | 指标 | 持续质量_gate |
@@ -267,7 +273,7 @@ python qa/qa_analysis.py        # 输出结构化 JSON
 
 ## 6. 附录：2026-10-25 已落地的 CI 增强
 
-针对 §4 P0 两项及 P1 性能项，已实施并随端口提交：
+针对 §4 P0 两项、P1 性能项、P1 Fuzz 项与 P1 错误健壮层，已实施并随端口提交：
 
 ### 6.1 依赖钉版本守卫（`qa/deps_check.py` + `dependency-pin` 作业）
 - **原理**：MoonBit **无 `moon-lock.json`**；依赖版本直接钉在 `moon.mod` 的 `import` 行（`"riantr/moonbit_image@0.3.7"`）。守卫扫描所有 `moon.mod`，要求每个**外部**注册表依赖带精确 `x.y.z` 钉；`moonbitlang/core/*` 工具链内置包豁免。
@@ -288,10 +294,16 @@ python qa/qa_analysis.py        # 输出结构化 JSON
 - **本地复现**：`python3 qa/bench_report.py --bench-dir src/src --json-out qa/bench_results.json`
 - **退出码语义**：0=通过；1=某基准突破预算；2=未解析到基准 / `moon bench` 非零退出。
 
-### 6.4 端口 CI 现状（`.github/workflows/ci.yml`）
+### 6.4 Fuzz / 属性测试套件（`src/src/fuzz_test.mbt`）
+- **动机**：补 §4 P1 Fuzz 维度（原 🔴）。MoonBit 无 libFuzzer 前端，故采用**确定性随机化测试**等价替代——固定种子的 xorshift64 PRNG 生成随机 IVP，对每个解断言“良构性”（已知返回码、时间单调、成功时状态有限）。
+- **覆盖的 7 个随机化 `test` 块**（约 1160 次随机求解）：线性衰减精度、常数 RHS 精确性、谐振子能量守恒、Tsit5↔Vern9 一致性、固定步位级可复现、随机多项式 RHS 不崩溃、刚性显式求解干净失败。
+- **不另设 CI 作业**：套件是普通 `test` 块，直接落入四目标 `test` 矩阵，门禁天然覆盖；固定种子保证可复现、无 flakiness。
+- **本地复现**：`moon test --target native`（或 js / wasm / wasm-gc）。
+
+### 6.5 端口 CI 现状（`.github/workflows/ci.yml`）
 | 作业 | 作用 | 门禁 |
 |------|------|------|
-| `test` ×4 | native/js/wasm/wasm-gc 四目标 `moon test` | 测试全绿 |
+| `test` ×4 | native/js/wasm/wasm-gc 四目标 `moon test`（含 `fuzz_test.mbt` 随机化套件） | 测试全绿 |
 | `check` | `moon check` / `moon fmt --check` / `moon info` | 0 错误、格式合规 |
 | `coverage` | 插桩测试 + 覆盖率门禁 + HTML 上报 | ≥90% 整体 / ≥80% 单模块 |
 | `dependency-pin` | 精确版本钉守卫 | 无未钉外部依赖 |
@@ -303,7 +315,7 @@ python qa/qa_analysis.py        # 输出结构化 JSON
 
 | 子项目 | 性质 | 测试 | SAST 信号 | 依赖 | 备注 |
 |-------|------|------|----------|------|------|
-| OrdinaryDiffEq.mbt | 数值库（主） | 91 块/150 断言，四目标全绿 | 1051 unsafe_get/set；0 extern | core 标准库 | 本次重点 |
+| OrdinaryDiffEq.mbt | 数值库（主） | 98 `test` 块 / 157 用例，四目标全绿（含 `fuzz_test.mbt` 7 个随机化块） | 1051 unsafe_get/set；0 extern | core 标准库 | 本次重点 |
 | OrdinaryDiffEq.jl | Julia 参考 | 极完善（千级测试/子库） | — | Julia 生态 | 成熟 CI/codecov/dependabot/benchmark |
 | depprobe2 | 依赖探针 | 复用 moonbit_image 的 lib_test | 0 extern | **riantr/moonbit_image@0.3.7** | 需锁版本 |
 | ffiprobe | FFI 探针 | 无 | 0 extern（探针） | 无 | 探索性，非生产 |
