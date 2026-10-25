@@ -37,3 +37,32 @@ jobs:
       - name: moon info (regenerate)
         working-directory: src
         run: moon info
+
+  coverage:
+    name: Coverage gate (native) + report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        uses: moonbitlang/install-moon@v0
+      - name: Run instrumented tests
+        working-directory: src
+        run: moon test --target native --enable-coverage
+      - name: Coverage gate + summary
+        run: python3 qa/coverage_gate.py --root src --report-html qa/coverage_report.html
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: qa/coverage_report.html
+
+  dependency-pin:
+    name: Dependency pin guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        uses: moonbitlang/install-moon@v0
+      - name: Verify exact pins
+        run: python3 qa/deps_check.py --root .
