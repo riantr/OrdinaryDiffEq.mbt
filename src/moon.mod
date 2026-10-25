@@ -15,7 +15,7 @@ keywords = [
 
 preferred_target = "native"
 
-supported_targets = [ "js", "wasm-gc", "native" ]
+supported_targets = [ "js", "wasm-gc", "wasm", "native" ]
 
 source = "src"
 

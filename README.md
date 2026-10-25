@@ -2,11 +2,11 @@
 
 [MoonBit](https://www.moonbitlang.com) 移植的 [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl)：一套**逐行对齐上游**的常微分方程求解器，覆盖显式 Runge–Kutta、Rosenbrock 与变阶变步长 BDF 三大家族，自带稠密输出、自适应步长控制、tstops、saveat 与 STALD 检测。
 
-无任何 Julia 依赖、无 FFI：数值内核（稠密 LU、Newton 迭代、有限差分 Jacobian、数学函数）全部用 MoonBit 重写，可在 **native / js / wasm-gc** 三个目标上编译运行。
+无任何 Julia 依赖、无 FFI：数值内核（稠密 LU、Newton 迭代、有限差分 Jacobian、数学函数）全部用 MoonBit 重写，可在 **native / js / wasm / wasm-gc** 四个目标上编译运行。
 
 - **包名**：`riantr/ordinarydiffeq`
 - **模块**：单 package（`src/moon.mod` + `src/src/moon.pkg`，`pkgtype: "library"`）
-- **测试**：150 个测试，三目标全绿
+- **测试**：150 个测试，四目标（native / js / wasm / wasm-gc）全绿
 
 ## 求解器清单
 
@@ -115,7 +115,7 @@ src/src/
 
 ```bash
 cd src
-moon test --target native   # 或 js / wasm-gc
+moon test --target native   # 或 js / wasm / wasm-gc
 moon check                 # 类型检查
 moon fmt                   # 格式化
 moon info                  # 重新生成 pkg.generated.mbti

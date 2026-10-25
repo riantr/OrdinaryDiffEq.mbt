@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [native, js, wasm-gc]
+        target: [native, js, wasm, wasm-gc]
     steps:
       - uses: actions/checkout@v4
       - name: Install MoonBit
