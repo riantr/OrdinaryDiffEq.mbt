@@ -17,12 +17,12 @@
 | 显式错误处理 | 🔴 **0 处**：无 `panic`/`abort`/`raise`/Result 传播，越界/奇异矩阵以运行时 panic 或静默 NaN 暴露 |
 | 安全敏感代码 | 🟡 `unsafe_get/unsafe_set` 出现 **1051 次**（数值内核普遍未做边界检查）；端口内 `extern`=0、FFI=无 |
 | 依赖与供应链 | 🟢 仅 `depprobe2` 引入外部包 `riantr/moonbit_image@0.3.7`（**已精确钉 `@0.3.7`**）；MoonBit 无 `moon-lock.json`（版本直接钉在 `moon.mod`）；CI 加 `deps_check.py` 钉版本守卫；Python 工具仅用标准库 |
-| 性能/基准 | 🟡 有 `bench_test.mbt`（用 `core/bench`），但**端口 CI 无基准回归门**（仅 Julia 侧有 `benchmark.yml`） |
+| 性能/基准 | 🟢 有 `bench_test.mbt`（用 `core/bench`）；**端口 CI 已加 `benchmark` 作业 + 50ms 合理性预算门**，JSON 结果上传 artifact（精确回归阈值待建基线；仅 Julia 侧有 `benchmark.yml`） |
 | Fuzz / Gherkin / 负载 | 🔴 全部缺失（对数值库属可选/低优先，但 Fuzz 价值高） |
 | 重复代码 | 🟡 结构性重复为主：`alg_vern7`/`alg_vern9` 共享 **109** 个相同 5 行片段；求解器脚手架跨 8 文件重复；测试样板跨 10 文件重复 |
 | 指标门禁 | 🔴 无自动复杂度/重复率/质量门禁（本次为一次性测算） |
 
-**总体判断**：端口的**功能正确性质量很高**（四目标全绿、覆盖率 91%、数值契约对齐上游），但**工程化 QA 体系不均衡**——测试与类型系统强，安全/错误健壮性、覆盖率门禁、性能回归、Fuzz、质量指标自动化偏弱。下面的 16 维度逐项给出证据与修复路线。
+**总体判断**：端口的**功能正确性质量很高**（四目标全绿、覆盖率 91%、数值契约对齐上游），且**工程化 QA 门禁已较完整**——测试矩阵、类型检查、覆盖率门禁+上报、依赖钉版本守卫、基准 CI 均已落地。剩余弱项集中在**错误健壮性（裸 panic / 静默 NaN）**、**Fuzz / 属性测试**、**自动质量指标门禁（复杂度/重复率趋势）** 与**精确性能回归阈值（需基线）**。下面的 16 维度逐项给出证据与修复路线。
 
 ---
 
@@ -44,7 +44,7 @@
 | 10 | E2E（端到端） | 🟡 | 四目标（native/js/wasm/wasm-gc）运行即多平台 E2E；无“应用级”E2E（`mbgui` 有 smoke_test） |
 | 11 | 覆盖率（Coverage） | 🟢 | 91% 行块覆盖；**CI 已加门禁（≥90% 整体 / ≥80% 单模块，bdf_utils/dense 豁免）+ HTML 上报 artifact**；`bdf_utils`/`dense` 偏低 |
 | 12 | Fuzz（模糊） | 🔴 | 无任何模糊/属性测试；数值鲁棒性（NaN/Inf/病态矩阵/dtmin）无保障 |
-| 13 | 性能（Performance） | 🟡 | 有 `bench_test`，但**无端口基准 CI / 无回归追踪** |
+| 13 | 性能（Performance） | 🟢 | 有 `bench_test`；**CI 已加 `benchmark` 作业（native/release）+ 50ms 合理性预算门**，JSON 结果上传 artifact 供趋势追踪；精确回归阈值待建基线 |
 | 14 | 负载（Load） | ⚪ | 非服务类库，无并发/吞吐面；大规模 N 的内存/稳定性未测（低优先） |
 | 15 | 重复代码（Duplication） | 🟡 | 多为代码生成家族的结构性重复（可接受），但测试样板与求解器脚手架可抽公共helper |
 | 16 | 指标（Metrics） | 🔴 | 无自动复杂度/重复率/质量门禁；本次为人工测算（附脚本可复用） |
@@ -201,12 +201,12 @@
   2. 引入轻量模糊：随机 `u0`/`tspan`/`reltol`/`abstol` 组合，断言不 panic、不产生非有限值（除非问题本身奇异并已文档化）。
   3. 将“非有限值/越界”显式转为可控错误（见错误健壮性问题）而非裸 panic。
 
-### 13) 性能 🟡
-- **发现**：有 `bench_test.mbt`（基于 `core/bench`），但**端口 CI 无基准作业、无回归追踪**；Julia 侧有成熟 `benchmark.yml` + `DiffEqDevTools`。
+### 13) 性能 🟢（CI 作业已加，精确回归待基线）
+- **发现**：有 `bench_test.mbt`（基于 `core/bench`，8 个基准：TSIT5/Vern7/Rosenbrock23/Rodas5P/FBDF × decay/van der Pol/stiff）。**端口 CI 已于 2026-10-25 加 `benchmark` 作业**（native/release 跑 `moon bench` + `qa/bench_report.py` 解析/汇总），并设 **50ms/基准的“合理性预算”硬门**（捕获灾难性回归/近死循环，而非精密回归阈值——绝对耗时随 runner 波动，紧阈值会误报）；结果 JSON 作为 artifact 上传，支持跨运行趋势比对。Julia 侧有成熟 `benchmark.yml` + `DiffEqDevTools`。
 - **建议**：
-  1. 端口 CI 增加 `benchmark` job（native 目标跑 `bench_test`，记录耗时/分配）。
-  2. 建立基准基线 + 回归阈值（参考 Julia 的 `benchmark.yml` 与 `qa_tests.jl`）。
-  3. 关注四目标间的性能差异（wasm/wasm-gc 的热路径与 native 不同）。
+  1. ~~端口 CI 增加 `benchmark` job~~ → 已完成（`qa/bench_report.py`）。
+  2. （可选）建立基准基线：将 artifact 中某次“黄金”运行的 JSON 存为 `qa/bench_baseline.json`，脚本加 `--baseline` 比对模式（回归 > N 倍则告警/失败），实现精密回归门——但需约定基线 runner 以消除机器差异。
+  3. 关注四目标间的性能差异（wasm/wasm-gc 的热路径与 native 不同）；可加 wasm-gc 基准作业横向对比。
 
 ### 14) 负载 ⚪（低优先）
 - **发现**：非服务类库，无并发/吞吐面；大规模 N（大状态向量）下的内存与稳定性未系统测试。
@@ -236,7 +236,7 @@
 | P0 | CI 加覆盖率门禁（≥90% 整体 / ≥80% 单模块，bdf_utils/dense 豁免）+ HTML 上报 | 覆盖率 | 防止回归、可视化趋势（**已完成**） |
 | P1 | 引入 Fuzz/属性测试（NaN/Inf/dtmin/随机 IVP） | Fuzz/健壮性 | 捕获静默错误与崩溃 |
 | P1 | 显式错误健壮层（非有限值/奇异矩阵→可控错误而非裸 panic） | SAST/运行时 | 可观测、可恢复 |
-| P1 | 端口基准 CI + 回归阈值 | 性能 | 防止性能退化 |
+| P1 | 端口基准 CI（合理性预算门）+ JSON 趋势 artifact | 性能 | 防止灾难性性能退化（**已完成**；精密回归阈值待基线） |
 | P2 | 测试样板/Verner 内核抽公共 helper | 重复代码 | 可维护性 |
 | P2 | 质量指标门禁（复杂度/重复率/SAST 趋势） | 指标 | 持续质量_gate |
 | P3 | 跨实现（vs Julia）对拍集成测试显式化 | 集成/契约 | 上游同步保障 |
@@ -267,7 +267,7 @@ python qa/qa_analysis.py        # 输出结构化 JSON
 
 ## 6. 附录：2026-10-25 已落地的 CI 增强
 
-针对 §4 P0 两项，已实施并随端口提交：
+针对 §4 P0 两项及 P1 性能项，已实施并随端口提交：
 
 ### 6.1 依赖钉版本守卫（`qa/deps_check.py` + `dependency-pin` 作业）
 - **原理**：MoonBit **无 `moon-lock.json`**；依赖版本直接钉在 `moon.mod` 的 `import` 行（`"riantr/moonbit_image@0.3.7"`）。守卫扫描所有 `moon.mod`，要求每个**外部**注册表依赖带精确 `x.y.z` 钉；`moonbitlang/core/*` 工具链内置包豁免。
@@ -281,13 +281,21 @@ python qa/qa_analysis.py        # 输出结构化 JSON
 - **本地复现**：`python3 qa/coverage_gate.py --root src --report-html qa/coverage_report.html`
 - **退出码语义**：0=通过；1=门禁违反；2=未找到覆盖率产物。
 
-### 6.3 端口 CI 现状（`.github/workflows/ci.yml`）
+### 6.3 基准 CI（`qa/bench_report.py` + `benchmark` 作业）
+- **流程**：`moon bench --target native --release` → `qa/bench_report.py` 解析每条基准的均值耗时与单位（归一化为 ns）→ 写 `GITHUB_STEP_SUMMARY`（PR 可见）+ 生成 JSON 结果并作为 `bench-results` artifact 上传。
+- **合理性预算门禁**：每条基准均值 > **50ms** 即失败（`--budget-ms` 可调）。该门仅防灾难性回归/近死循环——绝对耗时随 runner 波动，**不是**精密回归阈值；精密回归需先建基线（见 §13 建议）。
+- **当前实测**：8 条基准全过，耗时区间约 **356ns（fbdf stiff）~ 1.27µs（rodas5p stiff）**，全部远低于 50ms 预算。
+- **本地复现**：`python3 qa/bench_report.py --bench-dir src/src --json-out qa/bench_results.json`
+- **退出码语义**：0=通过；1=某基准突破预算；2=未解析到基准 / `moon bench` 非零退出。
+
+### 6.4 端口 CI 现状（`.github/workflows/ci.yml`）
 | 作业 | 作用 | 门禁 |
 |------|------|------|
 | `test` ×4 | native/js/wasm/wasm-gc 四目标 `moon test` | 测试全绿 |
 | `check` | `moon check` / `moon fmt --check` / `moon info` | 0 错误、格式合规 |
 | `coverage` | 插桩测试 + 覆盖率门禁 + HTML 上报 | ≥90% 整体 / ≥80% 单模块 |
 | `dependency-pin` | 精确版本钉守卫 | 无未钉外部依赖 |
+| `benchmark` | native/release 跑 `moon bench` + 解析/汇总 + JSON artifact | 单基准 ≤50ms 合理性预算 |
 
 ---
 

@@ -66,3 +66,19 @@ jobs:
         uses: moonbitlang/install-moon@v0
       - name: Verify exact pins
         run: python3 qa/deps_check.py --root .
+
+  benchmark:
+    name: Benchmark (native, release)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        uses: moonbitlang/install-moon@v0
+      - name: Run benchmarks + sanity gate
+        run: python3 qa/bench_report.py --bench-dir src/src --json-out qa/bench_results.json
+      - name: Upload JSON results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results
+          path: qa/bench_results.json
